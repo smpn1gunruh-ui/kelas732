@@ -23,71 +23,27 @@
       exam_title: "Penilaian Bab 2 - Sistem Komputer",
       school_name: "SMP Negeri 1 Gunungguruh",
       subject_info: "Informatika Kelas 7",
-      background_color: "#f0f9ff"
+      background_color: "#f0f9ff",
+      // Ganti URL Web App Google Apps Script Anda di sini
+      script_url: "https://script.google.com/macros/s/AKfycbzVTgd56dfUMSHugbPkAJlMIpWJ0RDFI8frj4u4hxFSQRWwgDiXAO45WlssyL-KReBwwA/exec" 
     };
 
-    // ===================== SOAL BAB 2 =====================
-    let questions = [
-      {question:"Apa yang dimaksud dengan sistem komputer?",options:[
-        "Gabungan antara perangkat keras dan lunak yang bekerja sendiri",
-        "Kumpulan perangkat keras, perangkat lunak, dan brainware yang saling berhubungan untuk mengolah data menjadi informasi",
-        "Hanya perangkat keras yang digunakan untuk mengolah data",
-        "Semua perangkat elektronik di rumah"],correct:1},
-
-      {question:"Komponen utama sistem komputer terdiri dari...",options:[
-        "Hardware, Software, Brainware",
-        "CPU, Monitor, Printer",
-        "Keyboard, Mouse, Speaker",
-        "RAM, ROM, Harddisk"],correct:0},
-
-      {question:"Yang termasuk perangkat keras (hardware) adalah...",options:[
-        "Microsoft Word",
-        "Windows 11",
-        "Keyboard",
-        "Google Chrome"],correct:2},
-
-      {question:"Perangkat lunak (software) berfungsi untuk...",options:[
-        "Menampilkan hasil cetak di kertas",
-        "Menjalankan dan mengendalikan perangkat keras komputer",
-        "Menyimpan file di flashdisk",
-        "Menghubungkan komputer ke listrik"],correct:1},
-
-      {question:"Orang yang mengoperasikan atau menggunakan komputer disebut...",options:[
-        "Software",
-        "Hardware",
-        "Operator atau Brainware",
-        "Processor"],correct:2},
-
-      {question:"CPU merupakan singkatan dari...",options:[
-        "Central Processing Unit",
-        "Control Power Unit",
-        "Central Print Utility",
-        "Computer Power Unit"],correct:0},
-
-      {question:"Fungsi utama CPU adalah...",options:[
-        "Menyimpan data dan program",
-        "Mencetak hasil kerja",
-        "Mengolah dan mengontrol jalannya sistem komputer",
-        "Menampilkan gambar di layar"],correct:2},
-
-      {question:"Perangkat input adalah...",options:[
-        "Perangkat untuk menampilkan hasil pengolahan data",
-        "Perangkat untuk memasukkan data ke komputer",
-        "Perangkat untuk menyimpan data",
-        "Perangkat untuk mencetak hasil"],correct:1},
-
-      {question:"Yang termasuk perangkat output adalah...",options:[
-        "Keyboard dan Mouse",
-        "Monitor dan Printer",
-        "CPU dan RAM",
-        "Scanner dan Joystick"],correct:1},
-
-      {question:"Sistem komputer tidak akan dapat bekerja jika...",options:[
-        "Tidak ada software",
-        "Tidak ada hardware",
-        "Tidak ada brainware",
-        "Semua benar"],correct:3}
+    // ===================== SOAL DEFAULT =====================
+    let defaultQuestions = [
+      {question:"Apa yang dimaksud dengan sistem komputer?",options:["Gabungan antara perangkat keras dan lunak yang bekerja sendiri","Kumpulan perangkat keras, perangkat lunak, dan brainware yang saling berhubungan untuk mengolah data menjadi informasi","Hanya perangkat keras yang digunakan untuk mengolah data","Semua perangkat elektronik di rumah"],correct:1},
+      {question:"Komponen utama sistem komputer terdiri dari...",options:["Hardware, Software, Brainware","CPU, Monitor, Printer","Keyboard, Mouse, Speaker","RAM, ROM, Harddisk"],correct:0},
+      {question:"Yang termasuk perangkat keras (hardware) adalah...",options:["Microsoft Word","Windows 11","Keyboard","Google Chrome"],correct:2},
+      {question:"Perangkat lunak (software) berfungsi untuk...",options:["Menampilkan hasil cetak di kertas","Menjalankan dan mengendalikan perangkat keras komputer","Menyimpan file di flashdisk","Menghubungkan komputer ke listrik"],correct:1},
+      {question:"Orang yang mengoperasikan atau menggunakan komputer disebut...",options:["Software","Hardware","Operator atau Brainware","Processor"],correct:2},
+      {question:"CPU merupakan singkatan dari...",options:["Central Processing Unit","Control Power Unit","Central Print Utility","Computer Power Unit"],correct:0},
+      {question:"Fungsi utama CPU adalah...",options:["Menyimpan data dan program","Mencetak hasil kerja","Mengolah dan mengontrol jalannya sistem komputer","Menampilkan gambar di layar"],correct:2},
+      {question:"Perangkat input adalah...",options:["Perangkat untuk menampilkan hasil pengolahan data","Perangkat untuk memasukkan data ke komputer","Perangkat untuk menyimpan data","Perangkat untuk mencetak hasil"],correct:1},
+      {question:"Yang termasuk perangkat output adalah...",options:["Keyboard dan Mouse","Monitor dan Printer","CPU dan RAM","Scanner dan Joystick"],correct:1},
+      {question:"Sistem komputer tidak akan dapat bekerja jika...",options:["Tidak ada software","Tidak ada hardware","Tidak ada brainware","Semua benar"],correct:3}
     ];
+
+    let questions = JSON.parse(localStorage.getItem('customQuestions')) || defaultQuestions;
+    let studentDatabase = JSON.parse(localStorage.getItem('studentDatabase')) || [];
 
     // ===================== FUNGSI ACAK =====================
     function shuffleArray(arr) {
@@ -119,7 +75,8 @@
       answers: new Array(questions.length).fill(null),
       timeLeft: 600,
       timer: null,
-      locked: false
+      locked: false,
+      adminPassword: 'admin123'
     };
 
     // ===================== UTILITAS =====================
@@ -132,7 +89,7 @@
     function navigate(d){if(!state.locked){const n=state.current+d;if(n>=0&&n<questions.length)state.current=n;render();}}
     function calculateScore(){let correct=0;state.answers.forEach((ans,i)=>{if(ans===questions[i].correct)correct++;});return Math.round((correct/questions.length)*100);}
 
-    // ===================== SIMPAN OTOMATIS KE SPREADSHEET =====================
+    // ===================== SUBMIT & DATABASE =====================
     function submitExam(){
       clearInterval(state.timer);
       const score = calculateScore();
@@ -144,7 +101,7 @@
         correct,
         total: questions.length,
         date: new Date().toLocaleString(),
-        bab: "Bab 2 - Sistem Komputer"
+        bab: config.exam_title
       };
 
       // Simpan lokal
@@ -152,13 +109,15 @@
       saved.push(data);
       localStorage.setItem('hasilUjian', JSON.stringify(saved));
 
-      // Kirim otomatis ke Google Spreadsheet
-      fetch("https://script.google.com/macros/s/AKfycbzVTgd56dfUMSHugbPkAJlMIpWJ0RDFI8frj4u4hxFSQRWwgDiXAO45WlssyL-KReBwwA/exec", {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
+      // Kirim otomatis ke Google Spreadsheet via Fetch POST (CORS Mode no-cors)
+      if(config.script_url) {
+        fetch(config.script_url, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        }).catch(err => console.log('Sync error:', err));
+      }
 
       state.screen = 'result';
       state.finalScore = score;
@@ -166,37 +125,184 @@
       render();
     }
 
-    // ===================== RENDER =====================
+    // ===================== RENDER UTAMA =====================
     function render(){
       const app=document.getElementById('app'),s=config;
+      
+      // 1. HALAMAN UTAMA / LOGIN SISWA
       if(state.screen==='start'){
-        app.innerHTML=`<div class='flex h-full items-center justify-center bg-[${s.background_color}] p-4'><div class='max-w-md w-full bg-white p-8 rounded-2xl shadow-xl'><h1 class='text-2xl font-bold text-center mb-2'>${s.exam_title}</h1><p class='text-center mb-1'>${s.school_name}</p><p class='text-center mb-6'>${s.subject_info}</p><div class='mb-4'><label class='font-semibold'>Nama Siswa</label><input id='name' type='text' class='w-full border rounded-lg p-3 mt-2' placeholder='Nama lengkap'></div><div class='mb-6'><label class='font-semibold'>Kelas</label><select id='class' class='w-full border rounded-lg p-3 mt-2'><option value=''>Pilih Kelas</option><option>7.1</option><option>7.2</option><option>7.3</option><option>7.4</option><option>7.5</option><option>7.6</option><option>7.7</option></select></div><button id='start' class='w-full bg-blue-500 text-white py-3 rounded-lg font-bold hover:bg-blue-600'>Mulai Ujian</button></div></div>`;
+        app.innerHTML=`<div class='flex h-full items-center justify-center bg-[${s.background_color}] p-4'>
+          <div class='max-w-md w-full bg-white p-8 rounded-2xl shadow-xl'>
+            <h1 class='text-2xl font-bold text-center mb-2'>${s.exam_title}</h1>
+            <p class='text-center text-slate-600 mb-1'>${s.school_name}</p>
+            <p class='text-center text-sm text-slate-500 mb-6'>${s.subject_info}</p>
+            <div class='mb-4'>
+              <label class='font-semibold text-sm'>Nama Siswa</label>
+              <input id='name' type='text' class='w-full border rounded-lg p-3 mt-1 text-sm' placeholder='Nama lengkap'>
+            </div>
+            <div class='mb-6'>
+              <label class='font-semibold text-sm'>Kelas</label>
+              <select id='class' class='w-full border rounded-lg p-3 mt-1 text-sm'>
+                <option value=''>Pilih Kelas</option>
+                <option>7.1</option><option>7.2</option><option>7.3</option><option>7.4</option><option>7.5</option><option>7.6</option><option>7.7</option>
+              </select>
+            </div>
+            <button id='start' class='w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition'>Mulai Ujian</button>
+            <div class='mt-4 text-center'>
+              <button id='to-admin' class='text-xs text-slate-400 hover:text-blue-600 underline'>Login Admin / Pengajar</button>
+            </div>
+          </div>
+        </div>`;
+
         document.getElementById('start').onclick=async()=>{
           const n=document.getElementById('name').value.trim();
           const c=document.getElementById('class').value;
           if(!n||!c)return alert('Isi nama dan kelas terlebih dahulu!');
-          state.studentName=n;state.studentClass=c;
+          state.studentName=n; state.studentClass=c;
           shuffleQuestions();
           await goFullScreen();
-          state.screen='exam';state.timeLeft=600;state.locked=false;
-          startTimer();render();
+          state.screen='exam'; state.timeLeft=600; state.locked=false;
+          startTimer(); render();
+        };
+
+        document.getElementById('to-admin').onclick=()=>{
+          const pwd = prompt("Masukkan Password Admin:");
+          if(pwd === state.adminPassword) {
+            state.screen = 'admin';
+            render();
+          } else if(pwd !== null) {
+            alert("Password salah!");
+          }
         };
       }
 
+      // 2. HALAMAN UJIAN
       else if(state.screen==='exam'){
         const q=questions[state.current];
-        app.innerHTML=`<div class='flex flex-col h-full bg-[${s.background_color}]'><div class='p-4 bg-white shadow flex justify-between items-center'><div><h2 class='font-bold'>${state.studentName}</h2><p class='text-sm'>Kelas ${state.studentClass} • Soal ${state.current+1}/${questions.length}</p></div><div class='text-right'><div id='timer' class='font-bold text-blue-600 text-xl'>${formatTime(state.timeLeft)}</div><p class='text-sm text-slate-600'>Waktu tersisa</p></div></div><div class='flex-1 overflow-y-auto p-4'>${state.locked?`<div class='text-center mt-20 text-red-600 font-bold text-xl'>Ujian dikunci karena keluar dari fullscreen.</div>`:`<div class='max-w-3xl mx-auto bg-white p-6 rounded-xl shadow question-card'><div class='flex mb-4'><span class='bg-blue-500 text-white px-3 py-1 rounded-lg mr-3 font-bold'>${state.current+1}</span><p class='font-semibold'>${q.question}</p></div><div class='space-y-3'>${q.options.map((opt,i)=>{const sel=state.answers[state.current]===i;return `<button class='option-button w-full text-left p-3 border-2 rounded-lg ${sel?'bg-green-500 text-white border-green-600':'border-slate-300'}' data-i='${i}'><span class='font-bold'>${String.fromCharCode(65+i)}.</span> ${opt}</button>`;}).join('')}</div></div><div class='flex justify-between mt-6'><button id='prev' class='px-4 py-2 rounded-lg border border-blue-600 text-blue-700 font-semibold ${state.current===0?'opacity-50 cursor-not-allowed':''}'>← Sebelumnya</button>${state.current===questions.length-1?`<button id='submit' class='px-6 py-2 bg-green-600 text-white font-bold rounded-lg'>Selesai & Kirim</button>`:`<button id='next' class='px-6 py-2 bg-blue-600 text-white font-bold rounded-lg'>Selanjutnya →</button>`}</div>`}</div></div>`;
+        app.innerHTML=`<div class='flex flex-col h-full bg-[${s.background_color}]'>
+          <div class='p-4 bg-white shadow flex justify-between items-center'>
+            <div><h2 class='font-bold'>${state.studentName}</h2><p class='text-sm text-slate-500'>Kelas ${state.studentClass} • Soal ${state.current+1}/${questions.length}</p></div>
+            <div class='text-right'><div id='timer' class='font-bold text-blue-600 text-xl'>${formatTime(state.timeLeft)}</div><p class='text-xs text-slate-500'>Waktu tersisa</p></div>
+          </div>
+          <div class='flex-1 overflow-y-auto p-4'>
+            ${state.locked?`<div class='text-center mt-20 text-red-600 font-bold text-xl'>Ujian dikunci karena keluar dari fullscreen.</div>`:
+            `<div class='max-w-3xl mx-auto bg-white p-6 rounded-xl shadow question-card'>
+              <div class='flex mb-4'><span class='bg-blue-500 text-white px-3 py-1 rounded-lg mr-3 font-bold text-sm h-fit'>${state.current+1}</span><p class='font-semibold'>${q.question}</p></div>
+              <div class='space-y-3'>${q.options.map((opt,i)=>{const sel=state.answers[state.current]===i;return `<button class='option-button w-full text-left p-3 border-2 rounded-lg text-sm ${sel?'bg-blue-600 text-white border-blue-600 font-semibold':'border-slate-200 hover:border-blue-300'}' data-i='${i}'><span class='font-bold'>${String.fromCharCode(65+i)}.</span> ${opt}</button>`;}).join('')}</div>
+            </div>
+            <div class='max-w-3xl mx-auto flex justify-between mt-6'>
+              <button id='prev' class='px-4 py-2 rounded-lg border border-blue-600 text-blue-700 text-sm font-semibold ${state.current===0?'opacity-50 cursor-not-allowed':''}'>← Sebelumnya</button>
+              ${state.current===questions.length-1?`<button id='submit' class='px-6 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700'>Selesai & Kirim</button>`:`<button id='next' class='px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700'>Selanjutnya →</button>`}
+            </div>`}
+          </div>
+        </div>`;
+
         document.querySelectorAll('[data-i]')?.forEach(b=>b.onclick=()=>selectAnswer(parseInt(b.dataset.i)));
         document.getElementById('prev')?.addEventListener('click',()=>navigate(-1));
         document.getElementById('next')?.addEventListener('click',()=>navigate(1));
         document.getElementById('submit')?.addEventListener('click',submitExam);
       }
 
+      // 3. HALAMAN HASIL UJIAN SISWA
       else if(state.screen==='result'){
         const g=state.finalScore>=90?'A':state.finalScore>=80?'B':state.finalScore>=70?'C':'D';
-        const msg=g==='A'?'Luar biasa!':'Tetap semangat, belajar lagi ya!';
-        app.innerHTML=`<div class='flex items-center justify-center h-full bg-[${s.background_color}] p-4'><div class='bg-white p-8 rounded-2xl shadow-xl text-center max-w-md w-full'><h1 class='text-2xl font-bold mb-3'>Ujian Selesai!</h1><p class='mb-6'>${msg}</p><div class='grid grid-cols-2 gap-4 mb-6'><div class='bg-blue-50 rounded-lg p-4'><div class='text-4xl font-bold text-blue-600'>${state.finalScore}</div><p>Nilai</p></div><div class='bg-green-50 rounded-lg p-4'><div class='text-4xl font-bold text-green-600'>${g}</div><p>Predikat</p></div></div><button id='finish' class='w-full bg-blue-600 text-white py-3 rounded-lg font-bold'>Tutup</button></div></div>`;
-        document.getElementById('finish').onclick=()=>{document.exitFullscreen();state.screen='start';render();};
+        const msg=g==='A'?'Luar biasa! Pertahankan prestasi Anda.':'Tetap semangat, tingkatkan lagi belajarnya!';
+        app.innerHTML=`<div class='flex items-center justify-center h-full bg-[${s.background_color}] p-4'>
+          <div class='bg-white p-8 rounded-2xl shadow-xl text-center max-w-md w-full'>
+            <h1 class='text-2xl font-bold mb-2'>Ujian Selesai!</h1>
+            <p class='text-slate-600 text-sm mb-6'>${msg}</p>
+            <div class='grid grid-cols-2 gap-4 mb-6'>
+              <div class='bg-blue-50 rounded-lg p-4'><div class='text-3xl font-bold text-blue-600'>${state.finalScore}</div><p class='text-xs text-slate-500 mt-1'>Nilai Akhir</p></div>
+              <div class='bg-green-50 rounded-lg p-4'><div class='text-3xl font-bold text-green-600'>${g}</div><p class='text-xs text-slate-500 mt-1'>Predikat</p></div>
+            </div>
+            <button id='finish' class='w-full bg-blue-600 text-white py-3 rounded-lg font-bold text-sm hover:bg-blue-700'>Keluar / Selesai</button>
+          </div>
+        </div>`;
+        document.getElementById('finish').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen();state.screen='start';render();};
+      }
+
+      // 4. MENU ADMIN
+      else if(state.screen==='admin'){
+        const savedResults = JSON.parse(localStorage.getItem('hasilUjian') || "[]");
+        app.innerHTML=`<div class='flex flex-col h-full bg-slate-100 overflow-y-auto'>
+          <div class='bg-white border-b px-6 py-4 flex justify-between items-center shadow-sm'>
+            <h1 class='font-bold text-lg text-slate-800'>Panel Administrasi Ujian</h1>
+            <button id='back-home' class='bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-300'>Kembali ke Beranda</button>
+          </div>
+          <div class='p-6 max-w-5xl w-full mx-auto space-y-6'>
+            
+            <!-- Aksi Manajemen Data -->
+            <div class='grid grid-cols-1 md:grid-cols-2 gap-4'>
+              <div class='bg-white p-5 rounded-xl shadow-sm border'>
+                <h2 class='font-bold text-sm text-slate-700 mb-2'>Kelola Data Siswa</h2>
+                <p class='text-xs text-slate-500 mb-4'>Impor data peserta ujian format CSV (Kolom: Nama, Kelas)</p>
+                <input type='file' id='import-siswa' accept='.csv' class='text-xs mb-2 block w-full text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100'/>
+              </div>
+              <div class='bg-white p-5 rounded-xl shadow-sm border'>
+                <h2 class='font-bold text-sm text-slate-700 mb-2'>Kelola Bank Soal</h2>
+                <p class='text-xs text-slate-500 mb-4'>Impor soal ujian dari file JSON bank soal.</p>
+                <input type='file' id='import-soal' accept='.json' class='text-xs mb-2 block w-full text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100'/>
+              </div>
+            </div>
+
+            <!-- Tabel Hasil Ujian Siswa -->
+            <div class='bg-white p-5 rounded-xl shadow-sm border'>
+              <div class='flex justify-between items-center mb-4'>
+                <h2 class='font-bold text-sm text-slate-700'>Rekap Nilai Siswa (${savedResults.length} Data)</h2>
+                <button id='export-csv' class='bg-emerald-600 text-white text-xs px-3 py-2 rounded-lg font-semibold hover:bg-emerald-700'>Ekspor Rekap (CSV)</button>
+              </div>
+              <div class='overflow-x-auto max-h-64'>
+                <table class='w-full text-left text-xs'>
+                  <thead class='bg-slate-50 text-slate-600 border-b'>
+                    <tr><th class='p-3'>Nama</th><th class='p-3'>Kelas</th><th class='p-3'>Nilai</th><th class='p-3'>Benar</th><th class='p-3'>Waktu Selesai</th></tr>
+                  </thead>
+                  <tbody class='divide-y'>
+                    ${savedResults.length === 0 ? `<tr><td colspan='5' class='p-4 text-center text-slate-400'>Belum ada data nilai masuk.</td></tr>` :
+                    savedResults.map(r=>`<tr><td class='p-3'>${r.name}</td><td class='p-3'>${r.class}</td><td class='p-3 font-bold text-blue-600'>${r.score}</td><td class='p-3'>${r.correct}/${r.total}</td><td class='p-3 text-slate-500'>${r.date}</td></tr>`).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div>`;
+
+        document.getElementById('back-home').onclick=()=>{state.screen='start';render();};
+
+        // Export CSV Rekap Nilai
+        document.getElementById('export-csv').onclick=()=>{
+          if(savedResults.length === 0) return alert('Tidak ada data untuk diekspor!');
+          let csv = 'Nama,Kelas,Nilai,Benar,Total,Waktu\n';
+          savedResults.forEach(r=>{ csv += `"${r.name}","${r.class}",${r.score},${r.correct},${r.total},"${r.date}"\n`; });
+          const blob = new Blob([csv], { type: 'text/csv' });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.setAttribute('href', url);
+          a.setAttribute('download', 'rekap_nilai_ujian.csv');
+          a.click();
+        };
+
+        // Import Soal JSON
+        document.getElementById('import-soal').onchange=(e)=>{
+          const file = e.target.files[0];
+          if(!file) return;
+          const reader = new FileReader();
+          reader.onload = (event)=>{
+            try {
+              const parsed = JSON.parse(event.target.result);
+              if(Array.isArray(parsed) && parsed.length > 0) {
+                questions = parsed;
+                localStorage.setItem('customQuestions', JSON.stringify(questions));
+                alert('Bank soal berhasil diperbarui!');
+              } else {
+                alert('Format JSON tidak valid.');
+              }
+            } catch(err) {
+              alert('Gagal membaca file JSON.');
+            }
+          };
+          reader.readAsText(file);
+        };
       }
     }
 
